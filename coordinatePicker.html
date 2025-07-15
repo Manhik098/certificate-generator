@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Certificate Coordinate Picker</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 30px;
+    }
+    canvas {
+      border: 2px solid #333;
+      cursor: crosshair;
+      max-width: 100%;
+    }
+    #coords {
+      font-size: 18px;
+      margin-top: 10px;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h2>🖱 Click to Get (X, Y) Coordinates</h2>
+  <input type="file" accept="image/*" id="imageLoader" />
+  <br><br>
+  <canvas id="canvas"></canvas>
+  <div id="coords">Click on the image to get coordinates</div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const imageLoader = document.getElementById('imageLoader');
+    const coordsDisplay = document.getElementById('coords');
+
+    let img = new Image();
+
+    imageLoader.addEventListener('change', (e) => {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    });
+
+    canvas.addEventListener('click', function(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.round(e.clientX - rect.left);
+      const y = Math.round(e.clientY - rect.top);
+      coordsDisplay.innerHTML = `🧭 X: ${x}, Y: ${y}`;
+
+      // Optional: Draw a marker
+      ctx.fillStyle = 'red';
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Optional: Show X,Y text on canvas
+      ctx.font = '16px Arial';
+      ctx.fillStyle = 'black';
+      ctx.fillText(`(${x}, ${y})`, x + 10, y - 10);
+    });
+  </script>
+</body>
+</html>

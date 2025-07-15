@@ -72,10 +72,10 @@ function App() {
             required
           >
             <option value="">Select Wing</option>
-            <option value="1CHD NAVAL UNIT">1CHD NAVAL UNIT</option>
-            <option value="1 CHD GIRLS BN">1 CHD GIRLS BN</option>
-            <option value="2 CHD BN">2 CHD BN</option>
-            <option value="1 CHD AIR SQN">1 CHD AIR SQN</option>
+            <option value="naval">1CHD NAVAL UNIT</option>
+            <option value="girlsbn">1 CHD GIRLS BN</option>
+            <option value="2chdbn">2 CHD BN</option>
+            <option value="air">1 CHD AIR SQN</option>
           </select>
         </div>
 
@@ -88,8 +88,8 @@ function App() {
             required
           >
             <option value="">Select Certificate Type</option>
-            <option value="Merit">Merit</option>
-            <option value="Participation">Participation</option>
+            <option value="merit">Merit</option>
+            <option value="participation">Participation</option>
           </select>
         </div>
 
