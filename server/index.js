@@ -1,5 +1,3 @@
-// index.js - Full backend for NCC Certificate Generator using image templates and config-driven coordinates
-
 const express = require('express');
 const multer = require('multer');
 const ExcelJS = require('exceljs');
@@ -23,6 +21,18 @@ const allConfigs = {
   ...participationConfigs,
 };
 
+app.use('/templates', express.static(path.join(__dirname, 'templates')));
+
+// ✅ Wing name mapping helper
+const getWingKey = (wing) => {
+  const lower = wing.toLowerCase();
+  if (lower.includes('naval')) return 'naval';
+  if (lower.includes('girls')) return 'girlsbn';
+  if (lower.includes('air')) return 'air';
+  if (lower.includes('2 chd')) return '2chdbn';
+  return ''; // fallback if not matched
+};
+
 const generateCertificate = async (templatePath, data, coords, outputPath) => {
   const image = await loadImage(templatePath);
   const canvas = createCanvas(image.width, image.height);
@@ -37,7 +47,6 @@ const generateCertificate = async (templatePath, data, coords, outputPath) => {
       const [x, y] = coords[key];
       let value = data[key];
 
-      // Optional: Format date
       if (key === 'date' || key === 'from' || key === 'to') {
         try {
           const d = new Date(value);
@@ -59,10 +68,18 @@ const generateCertificate = async (templatePath, data, coords, outputPath) => {
 
 app.post('/generate-cert', upload.single('excel'), async (req, res) => {
   const file = req.file;
-  const certType = (req.body.certType || '').toLowerCase(); // 'merit' or 'participation'
-  const wing = (req.body.wing || '').toLowerCase(); // 'naval', 'air', etc.
+  const certType = (req.body.certType || '').toLowerCase();
+  const wing = req.body.wing || '';
+  const wingKey = getWingKey(wing);
 
   if (!file) return res.status(400).send('No file uploaded');
+
+  const templateKey = `${wingKey}-${certType}`;
+  const config = allConfigs[templateKey];
+
+  if (!config) {
+    return res.status(400).send(`Unknown certificate type: ${templateKey}`);
+  }
 
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.readFile(file.path);
@@ -73,15 +90,10 @@ app.post('/generate-cert', upload.single('excel'), async (req, res) => {
   const archive = archiver('zip');
   archive.pipe(output);
 
-  const templateKey = `${wing}-${certType}`;
-  const config = allConfigs[templateKey];
-
-  if (!config) return res.status(400).send(`Unknown certificate type: ${templateKey}`);
-
   for (let i = 2; i <= sheet.rowCount; i++) {
     const row = sheet.getRow(i);
-
     const data = {};
+
     config.fields.forEach((field, idx) => {
       const cellVal = row.getCell(idx + 1).value;
       data[field] = cellVal || '';
@@ -102,7 +114,6 @@ app.post('/generate-cert', upload.single('excel'), async (req, res) => {
       fs.unlinkSync(zipPath);
       fs.unlinkSync(file.path);
 
-      // Cleanup individual certs
       fs.readdirSync(__dirname)
         .filter((f) => f.endsWith('.png') && f !== 'templates')
         .forEach((f) => fs.unlinkSync(path.join(__dirname, f)));

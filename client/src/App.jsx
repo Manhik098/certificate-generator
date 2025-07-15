@@ -1,15 +1,43 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Toaster, toast } from 'react-hot-toast';
 
 function App() {
   const [excelFile, setExcelFile] = useState(null);
   const [wing, setWing] = useState('');
   const [certType, setCertType] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewURL, setPreviewURL] = useState('');
+
+  const getWingKey = (wing) => {
+    const wingLower = wing.toLowerCase();
+    if (wingLower.includes('naval')) return 'naval';
+    if (wingLower.includes('girls')) return 'girlsbn';
+    if (wingLower.includes('air')) return 'air';
+    if (wingLower.includes('2 chd')) return '2chdbn';
+    return '';
+  };
+
+  useEffect(() => {
+    if (wing && certType) {
+      const wingKey = getWingKey(wing);
+      const certKey = certType.toLowerCase();
+      if (wingKey) {
+        setPreviewLoading(true);
+        setPreviewURL(`http://localhost:3000/templates/${wingKey}-${certKey}.png`);
+      } else {
+        setPreviewURL('');
+      }
+    } else {
+      setPreviewURL('');
+    }
+  }, [wing, certType]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!excelFile || !wing || !certType) {
-      alert('Please fill all fields.');
+      toast.error('Please fill all fields.');
       return;
     }
 
@@ -19,13 +47,15 @@ function App() {
     formData.append('certType', certType);
 
     try {
+      setLoading(true);
       const response = await fetch('http://localhost:3000/generate-cert', {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate certificates');
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to generate certificates');
       }
 
       const blob = await response.blob();
@@ -36,69 +66,123 @@ function App() {
       document.body.appendChild(a);
       a.click();
       a.remove();
+      toast.success('Certificates downloaded!');
     } catch (error) {
       console.error(error);
-      alert('Something went wrong. Check the server or inputs.');
+      toast.error(error.message || 'Something went wrong!');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
+    <div className="relative min-h-screen flex items-center justify-center px-4 py-10 bg-black">
+      {/* Background Image */}
+      <img
+        src="/public/bg.jpg" // ← Place this image inside your /public folder
+        alt="Background"
+        className="absolute inset-0 w-full h-full object-cover opacity-60"
+      />
+
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-black bg-opacity-40" />
+
+      {/* Main Form */}
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-lg shadow-md w-full max-w-md space-y-6"
+        className="relative z-10 bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg space-y-6 border border-blue-200"
       >
-        <h1 className="text-2xl font-bold text-center text-blue-700 mb-4">
+        <Toaster position="top-center" />
+        <h1 className="text-3xl font-bold text-center text-blue-700">
           NCC Certificate Generator
         </h1>
 
         <div>
-          <label className="block mb-1 font-medium">Upload Excel File</label>
+          <label className="block mb-1 font-medium text-gray-700">
+            Upload Excel File
+          </label>
           <input
             type="file"
             accept=".xlsx,.xls"
             onChange={(e) => setExcelFile(e.target.files[0])}
-            className="block w-full border p-2 rounded"
+            className="block w-full border border-gray-300 p-2 rounded shadow-sm"
             required
           />
         </div>
 
         <div>
-          <label className="block mb-1 font-medium">Select Wing</label>
+          <label className="block mb-1 font-medium text-gray-700">
+            Select Wing
+          </label>
           <select
             value={wing}
             onChange={(e) => setWing(e.target.value)}
-            className="block w-full border p-2 rounded"
+            className="block w-full border border-gray-300 p-2 rounded shadow-sm"
             required
           >
             <option value="">Select Wing</option>
-            <option value="naval">1CHD NAVAL UNIT</option>
-            <option value="girlsbn">1 CHD GIRLS BN</option>
-            <option value="2chdbn">2 CHD BN</option>
-            <option value="air">1 CHD AIR SQN</option>
+            <option value="1CHD NAVAL UNIT">1CHD NAVAL UNIT</option>
+            <option value="1 CHD GIRLS BN">1 CHD GIRLS BN</option>
+            <option value="2 CHD BN">2 CHD BN</option>
+            <option value="1 CHD AIR SQN">1 CHD AIR SQN</option>
           </select>
         </div>
 
         <div>
-          <label className="block mb-1 font-medium">Select Certificate Type</label>
+          <label className="block mb-1 font-medium text-gray-700">
+            Select Certificate Type
+          </label>
           <select
             value={certType}
             onChange={(e) => setCertType(e.target.value)}
-            className="block w-full border p-2 rounded"
+            className="block w-full border border-gray-300 p-2 rounded shadow-sm"
             required
           >
             <option value="">Select Certificate Type</option>
-            <option value="merit">Merit</option>
-            <option value="participation">Participation</option>
+            <option value="Merit">Merit</option>
+            <option value="Participation">Participation</option>
           </select>
         </div>
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700 transition"
+          disabled={loading}
+          className={`w-full text-white font-semibold py-2 px-4 rounded transition duration-200 ${
+            loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+          }`}
         >
-          Generate Certificates
+          {loading ? 'Generating...' : 'Generate Certificates'}
         </button>
+
+        <div className="mt-6">
+          <h2 className="text-md font-semibold mb-2 text-gray-700">
+            Certificate Preview:
+          </h2>
+          {wing && certType ? (
+            <div className="flex items-center justify-center">
+              {previewLoading && <div className="text-gray-500">Loading preview...</div>}
+              {previewURL && (
+                <img
+                  src={previewURL}
+                  alt="Certificate Preview"
+                  onLoad={() => setPreviewLoading(false)}
+                  onError={() => {
+                    setPreviewLoading(false);
+                    setPreviewURL('');
+                    toast.error('Preview image not found');
+                  }}
+                  className={`w-full h-auto rounded-xl shadow-lg border border-gray-300 object-contain max-h-[500px] ${
+                    previewLoading ? 'hidden' : ''
+                  }`}
+                />
+              )}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center">
+              Please select wing and certificate type to preview
+            </p>
+          )}
+        </div>
       </form>
     </div>
   );
