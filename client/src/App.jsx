@@ -24,7 +24,7 @@ function App() {
       const certKey = certType.toLowerCase();
       if (wingKey) {
         setPreviewLoading(true);
-        setPreviewURL(`https://certificate-generator-backend-x2xh.onrender.com/generate-cert/templates/${wingKey}-${certKey}.png`);
+        setPreviewURL(`https://certificate-generator-backend-x2xh.onrender.com/templates/${wingKey}-${certKey}.png`);
       } else {
         setPreviewURL('');
       }
@@ -79,7 +79,7 @@ function App() {
     <div className="relative min-h-screen flex items-center justify-center px-4 py-10 bg-black">
       {/* Background Image */}
       <img
-        src="/public/bg.jpg" // ← Place this image inside your /public folder
+        src="/bg.jpg" // ← Place this image inside your /public folder
         alt="Background"
         className="absolute inset-0 w-full h-full object-cover opacity-60"
       />
