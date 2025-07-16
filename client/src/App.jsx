@@ -24,7 +24,7 @@ function App() {
       const certKey = certType.toLowerCase();
       if (wingKey) {
         setPreviewLoading(true);
-        setPreviewURL(`http://localhost:3000/templates/${wingKey}-${certKey}.png`);
+        setPreviewURL(`https://certificate-generator-backend-x2xh.onrender.com/generate-cert/templates/${wingKey}-${certKey}.png`);
       } else {
         setPreviewURL('');
       }
@@ -48,7 +48,7 @@ function App() {
 
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3000/generate-cert', {
+      const response = await fetch('https://certificate-generator-backend-x2xh.onrender.com/generate-cert', {
         method: 'POST',
         body: formData,
       });
