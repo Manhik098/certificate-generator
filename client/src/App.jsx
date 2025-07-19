@@ -1,21 +1,21 @@
-import { useState, useEffect } from 'react';
-import { Toaster, toast } from 'react-hot-toast';
+import { useState, useEffect } from "react";
+import { Toaster, toast } from "react-hot-toast";
 
 function App() {
   const [excelFile, setExcelFile] = useState(null);
-  const [wing, setWing] = useState('');
-  const [certType, setCertType] = useState('');
+  const [wing, setWing] = useState("");
+  const [certType, setCertType] = useState("");
   const [loading, setLoading] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewURL, setPreviewURL] = useState('');
+  const [previewURL, setPreviewURL] = useState("");
 
   const getWingKey = (wing) => {
     const wingLower = wing.toLowerCase();
-    if (wingLower.includes('naval')) return 'naval';
-    if (wingLower.includes('girls')) return 'girlsbn';
-    if (wingLower.includes('air')) return 'air';
-    if (wingLower.includes('2 chd')) return '2chdbn';
-    return '';
+    if (wingLower.includes("naval")) return "naval";
+    if (wingLower.includes("girls")) return "girlsbn";
+    if (wingLower.includes("air")) return "air";
+    if (wingLower.includes("2 chd")) return "2chdbn";
+    return "";
   };
 
   useEffect(() => {
@@ -24,12 +24,14 @@ function App() {
       const certKey = certType.toLowerCase();
       if (wingKey) {
         setPreviewLoading(true);
-        setPreviewURL(`https://certificate-generator-backend-x2xh.onrender.com/templates/${wingKey}-${certKey}.png`);
+        setPreviewURL(
+          `https://certificate-generator-backend-x2xh.onrender.com/templates/${wingKey}-${certKey}.png`
+        );
       } else {
-        setPreviewURL('');
+        setPreviewURL("");
       }
     } else {
-      setPreviewURL('');
+      setPreviewURL("");
     }
   }, [wing, certType]);
 
@@ -37,39 +39,42 @@ function App() {
     e.preventDefault();
 
     if (!excelFile || !wing || !certType) {
-      toast.error('Please fill all fields.');
+      toast.error("Please fill all fields.");
       return;
     }
 
     const formData = new FormData();
-    formData.append('excel', excelFile);
-    formData.append('wing', wing);
-    formData.append('certType', certType);
+    formData.append("excel", excelFile);
+    formData.append("wing", wing);
+    formData.append("certType", certType);
 
     try {
       setLoading(true);
-      const response = await fetch('https://certificate-generator-backend-x2xh.onrender.com/generate-cert', {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await fetch(
+        "https://certificate-generator-backend-x2xh.onrender.com/generate-cert",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(errorText || 'Failed to generate certificates');
+        throw new Error(errorText || "Failed to generate certificates");
       }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = 'certificates.zip';
+      a.download = "certificates.zip";
       document.body.appendChild(a);
       a.click();
       a.remove();
-      toast.success('Certificates downloaded!');
+      toast.success("Certificates downloaded!");
     } catch (error) {
       console.error(error);
-      toast.error(error.message || 'Something went wrong!');
+      toast.error(error.message || "Something went wrong!");
     } finally {
       setLoading(false);
     }
@@ -148,10 +153,12 @@ function App() {
           type="submit"
           disabled={loading}
           className={`w-full text-white font-semibold py-2 px-4 rounded transition duration-200 ${
-            loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+            loading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
-          {loading ? 'Generating...' : 'Generate Certificates'}
+          {loading ? "Generating..." : "Generate Certificates"}
         </button>
 
         <div className="mt-6">
@@ -160,7 +167,14 @@ function App() {
           </h2>
           {wing && certType ? (
             <div className="flex items-center justify-center">
-              {previewLoading && <div className="text-gray-500">Loading preview...</div>}
+              {previewLoading && (
+                <div className="text-gray-500">
+                  Loading preview...
+                  <div className="flex justify-center items-center min-h-[100px]">
+                    <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                </div>
+              )}
               {previewURL && (
                 <img
                   src={previewURL}
@@ -168,11 +182,11 @@ function App() {
                   onLoad={() => setPreviewLoading(false)}
                   onError={() => {
                     setPreviewLoading(false);
-                    setPreviewURL('');
-                    toast.error('Preview image not found');
+                    setPreviewURL("");
+                    toast.error("Preview image not found");
                   }}
                   className={`w-full h-auto rounded-xl shadow-lg border border-gray-300 object-contain max-h-[500px] ${
-                    previewLoading ? 'hidden' : ''
+                    previewLoading ? "hidden" : ""
                   }`}
                 />
               )}
